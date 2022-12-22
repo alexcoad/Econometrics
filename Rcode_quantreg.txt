@@ -1,0 +1,113 @@
+
+
+
+############################################################
+# OLS as conditional mean
+
+
+# choose a seed number, any number will do
+set.seed(25)
+mydata <- NULL
+mydata <- data.frame(x = (rnorm(100, mean=10, sd=2)), y = 0)
+# take a look at the first few rows of "mydata"
+head(mydata)
+mydata$y <- 15 + 2*mydata$x + rnorm(20,mean=0,sd=8)
+# look again at mydata, now that y has been generated
+head(mydata)
+
+
+# the mean of y
+mean(mydata$y)
+plot(y~x, data=mydata)
+abline(h=mean(mydata$y), lty=2)
+
+
+# the CONDITIONAL mean of y (conditional on x)
+summary(lm(y~x, data=mydata))
+plot(y~x, data=mydata)
+abline(lm(y~x, data=mydata))
+
+
+
+
+# Unconditional median, unconditional 90% quantile
+
+# the median of y
+median(mydata$y)
+plot(y~x, data=mydata)
+abline(h=median(mydata$y), lty=3)
+# note: in this case, the median is not equal to the mean 
+abline(h=mean(mydata$y), lty=2)
+
+
+# the 90% quantile of y
+quantile(mydata$y, probs=0.9)
+abline(h=quantile(mydata$y, probs=0.9),lty=4)
+
+
+
+
+############################################################
+# Conditional median, conditional quantiles
+
+
+# package needed for quantile regression
+# install.packages(quantreg)
+library(quantreg)
+
+
+# the conditional median of y (conditional on x)
+#  i.e. the median regression solution
+#  also known as quantile regression at the 50% quantile
+rq.1 <- rq(y~x, data=mydata,tau=0.5)
+summary(rq.1)
+plot(y~x, data=mydata)
+abline(rq.1)
+# note: the conditional median is not the same as the mean
+ols.1 <- lm(y~x, data=mydata)
+abline(ols.1, lty=2)
+
+
+# now, the conditional 90% quantile
+#  i.e. quantile regression at tau=0.9 (90% quantile)
+rq.2 <- rq(y~x, data=mydata,tau=0.9)
+summary(rq.2)
+# quantile regression line plotted with linetype=2
+abline(rq.2, lty=2)
+
+
+
+
+
+############################################################
+# Quantile regression is less sensitive than OLS to outliers on y
+
+mydata
+# let's manually introduce an outlier in row 5
+mydata$y[5] <- -10
+head(mydata)
+
+rq.2 <- rq(y~x, data=mydata,tau=0.5)
+ols.2 <- lm(y~x, data=mydata)
+
+
+
+#  The median regression solution changes a bit...
+summary(rq.1)
+summary(rq.2)
+
+# ... but not as much as OLS
+summary(ols.1)
+summary(ols.2)
+
+
+plot(y~x, data=mydata)
+# OLS line (i.e. conditional mean)
+abline(ols.1, lty=2)
+abline(ols.2, lty=3)
+# The OLS line changes by more than the quantile regression line 
+abline(rq.2)
+abline(rq.1)
+
+
+
